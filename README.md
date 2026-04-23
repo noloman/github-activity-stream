@@ -232,27 +232,56 @@ It is enabled by default. Set it to `false` in a profile if you want to run the 
 
 ## Learning-Focused Future Improvements
 
-- Add integration tests with Testcontainers for Kafka and PostgreSQL.
-- Add unit tests for the service, mapper, controller, and Kafka consumer layers.
+The list below is prioritized for learning value and practical impact. Start with the high-priority items before moving into broader production-readiness topics.
+
+### Priority 1: Correctness and Developer Feedback
+
+These are the best first improvements because they make the current application easier to trust and change safely.
+
+- Fix the dashboard's historical fetch path so it uses the current `/api/v1/events/recent` endpoint.
 - Add validation for query parameters such as page size, event type, and recency range.
 - Add global exception handling with meaningful API error responses.
+- Add unit tests for the service, mapper, controller, and Kafka consumer layers.
+- Add integration tests with Testcontainers for Kafka and PostgreSQL.
+- Store the GitHub event `created_at` value from the API instead of only the ingestion timestamp.
+- Deduplicate GitHub events by GitHub event ID to avoid storing repeated poll results.
+
+### Priority 2: Resilience and Event Processing
+
+These improvements teach the reliability patterns that matter in event-driven systems.
+
 - Replace `System.err.println` with structured logging.
 - Add retry and backoff behavior for GitHub API failures and Kafka publishing failures.
 - Handle GitHub API rate limits explicitly, including response headers and cooldown behavior.
-- Deduplicate GitHub events by GitHub event ID to avoid storing repeated poll results.
-- Store the GitHub event `created_at` value from the API instead of only the ingestion timestamp.
 - Add a dead-letter topic for events that cannot be deserialized or persisted.
+- Add event processing workflows that update the `processed` field.
+
+### Priority 3: Observability and API Usability
+
+These make the application easier to operate, inspect, and consume.
+
 - Add metrics with Spring Boot Actuator and Micrometer.
 - Add OpenAPI documentation for the REST API.
-- Improve the dashboard with historical event loading, reconnect handling, and richer filters.
-- Fix the dashboard's historical fetch path so it uses the current `/api/v1/events/recent` endpoint.
-- Add authentication or admin-only controls before exposing operational actions.
-- Add Dockerfile support so the whole application can run through Docker Compose.
-- Add CI to run tests and verify the project builds on every pull request.
-- Add database migration examples for schema changes beyond the initial table.
-- Explore Kafka message schemas with Avro, JSON Schema, or Protobuf.
-- Add event processing workflows that update the `processed` field.
 - Add filtering by actor login and full-text search over payloads.
+- Add database migration examples for schema changes beyond the initial table.
+
+### Priority 4: Frontend and User Experience
+
+These are useful once the backend behavior is stable.
+
+- Improve the dashboard with historical event loading, reconnect handling, and richer filters.
+- Show connection state, empty states, and error states in the dashboard.
+- Add event detail views for large payloads instead of rendering all JSON inline.
+
+### Priority 5: Packaging, Security, and Advanced Topics
+
+These are valuable later-stage improvements for production-readiness and deeper learning.
+
+- Add Dockerfile support so the whole application can run through Docker Compose.
+- Add authentication or admin-only controls before exposing operational actions.
+- Explore Kafka message schemas with Avro, JSON Schema, or Protobuf.
+- Add environment-specific configuration for local, test, CI, and production profiles.
+- Extend the existing GitHub Actions workflow with dependency review, code coverage, and container image builds.
 
 ## Current Scope
 

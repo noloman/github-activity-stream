@@ -1,6 +1,7 @@
 package me.manulorenzo.github_activity_stream.service;
 
 import me.manulorenzo.github_activity_stream.domain.GitHubEvent;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Arrays;
 
 @Service
+@ConditionalOnProperty(prefix = "github.public-events", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class GitHubPublicEventsService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;

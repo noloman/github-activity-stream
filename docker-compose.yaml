@@ -1,10 +1,12 @@
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.0.1
+    platform: linux/amd64
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
   kafka:
     image: confluentinc/cp-kafka:7.0.1
+    platform: linux/amd64
     depends_on:
       - zookeeper
     ports:

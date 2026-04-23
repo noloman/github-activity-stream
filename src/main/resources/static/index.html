@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GitHub Public Events Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #events { margin-top: 20px; }
+        .event {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .event-repo { font-weight: bold; margin-bottom: 5px; color: #2c3e50; }
+        .event-type { color: #fff; padding: 3px 6px; border-radius: 3px; display: inline-block; margin-right: 10px; }
+        .event-type.PushEvent { background-color: #3498db; }
+        .event-type.IssuesEvent { background-color: #e74c3c; }
+        .event-type.PullRequestEvent { background-color: #2ecc71; }
+        .event-time { color: #7f8c8d; font-size: 0.9em; float: right; }
+    </style>
+</head>
+<body>
+<h1>🚀 GitHub Public Events Dashboard</h1>
+<div>
+    <label>Filter by Event Type:</label>
+    <select id="event-type-filter" onchange="filterEvents()">
+        <option value="">All Event Types</option>
+        <option value="PushEvent">Pushes</option>
+        <option value="IssuesEvent">Issues</option>
+        <option value="PullRequestEvent">Pull Requests</option>
+        <option value="WatchEvent">Stars</option>
+    </select>
+</div>
+<div id="events"></div>
+
+<!-- WebSocket Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script>
+    const socket = new SockJS('/ws');
+    const stompClient = Stomp.over(socket);
+    let allEvents = [];
+
+    stompClient.connect({}, function() {
+        console.log("Connected to WebSocket!");
+        stompClient.subscribe('/topic/github-events', function(message) {
+            const event = JSON.parse(message.body);
+            allEvents.unshift(event); // Add to the beginning of the array
+            renderEvents();
+        });
+    });
+
+    function renderEvents() {
+        const filter = document.getElementById('event-type-filter').value;
+        const eventsContainer = document.getElementById('events');
+        eventsContainer.innerHTML = '';
+
+        allEvents
+            .filter(event => filter === '' || event.type === filter)
+            .slice(0, 50) // Show max 50 events
+            .forEach(event => {
+                const eventElement = document.createElement('div');
+                eventElement.className = 'event';
+
+                const date = new Date();
+                const timeString = date.toLocaleTimeString();
+
+                eventElement.innerHTML = `
+                    <div>
+                        <span class="event-type ${event.type}">${event.type}</span>
+                        <span class="event-time">${timeString}</span>
+                    </div>
+                    <div class="event-repo">${event.repo.name}</div>
+                    <pre style="margin-top: 5px; font-size: 0.85em; max-height: 200px; overflow: auto;">
+${JSON.stringify(event.payload, null, 2)}
+                    </pre>
+                `;
+                eventsContainer.appendChild(eventElement);
+            });
+    }
+
+    function filterEvents() {
+        renderEvents();
+    }
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-package me.manulorenzo.github_activity_stream;
+package me.manulorenzo.github_activity_stream.service;
 
 import me.manulorenzo.github_activity_stream.domain.GitHubEvent;
 import org.springframework.kafka.core.KafkaTemplate;

@@ -32,6 +32,7 @@
         <option value="WatchEvent">Stars</option>
     </select>
 </div>
+<div id="historical-events"></div>
 <div id="events"></div>
 
 <!-- WebSocket Libraries -->
@@ -52,6 +53,50 @@
         });
     });
 
+    function formatPayload(payload) {
+        try {
+            return JSON.stringify(JSON.parse(payload), null, 2);
+        } catch (error) {
+            console.error('Failed to parse payload JSON', error);
+            return payload;
+        }
+    }
+
+    function createEventElement(repoName, type, createdAt, payload) {
+        const eventElement = document.createElement('div');
+        eventElement.className = 'event';
+
+        const header = document.createElement('div');
+
+        const typeElement = document.createElement('span');
+        typeElement.className = `event-type ${type}`;
+        typeElement.textContent = type;
+
+        const timeElement = document.createElement('span');
+        timeElement.className = 'event-time';
+        timeElement.textContent = new Date(createdAt).toLocaleString();
+
+        header.appendChild(typeElement);
+        header.appendChild(timeElement);
+
+        const repoElement = document.createElement('div');
+        repoElement.className = 'event-repo';
+        repoElement.textContent = repoName;
+
+        const payloadElement = document.createElement('pre');
+        payloadElement.style.marginTop = '5px';
+        payloadElement.style.fontSize = '0.85em';
+        payloadElement.style.maxHeight = '200px';
+        payloadElement.style.overflow = 'auto';
+        payloadElement.textContent = formatPayload(payload);
+
+        eventElement.appendChild(header);
+        eventElement.appendChild(repoElement);
+        eventElement.appendChild(payloadElement);
+
+        return eventElement;
+    }
+
     function renderEvents() {
         const filter = document.getElementById('event-type-filter').value;
         const eventsContainer = document.getElementById('events');
@@ -61,22 +106,12 @@
             .filter(event => filter === '' || event.type === filter)
             .slice(0, 50) // Show max 50 events
             .forEach(event => {
-                const eventElement = document.createElement('div');
-                eventElement.className = 'event';
-
-                const date = new Date();
-                const timeString = date.toLocaleTimeString();
-
-                eventElement.innerHTML = `
-                    <div>
-                        <span class="event-type ${event.type}">${event.type}</span>
-                        <span class="event-time">${timeString}</span>
-                    </div>
-                    <div class="event-repo">${event.repo.name}</div>
-                    <pre style="margin-top: 5px; font-size: 0.85em; max-height: 200px; overflow: auto;">
-${JSON.stringify(event.payload, null, 2)}
-                    </pre>
-                `;
+                const eventElement = createEventElement(
+                    event.repoName,
+                    event.type,
+                    event.createdAt,
+                    event.payload
+                );
                 eventsContainer.appendChild(eventElement);
             });
     }
@@ -86,19 +121,18 @@ ${JSON.stringify(event.payload, null, 2)}
     }
     // Fetch and display historical events
     function fetchHistoricalEvents() {
-        fetch('http://localhost:8080/api/events/recent?hours=1')
+        fetch('/api/v1/events/recent?hours=1')
             .then(response => response.json())
             .then(events => {
                 const eventsContainer = document.getElementById('historical-events');
                 eventsContainer.innerHTML = '<h2>Recent Events (Last Hour)</h2>';
                 events.forEach(event => {
-                    const eventElement = document.createElement('div');
-                    eventElement.className = 'event';
-                    eventElement.innerHTML = `
-                        <div class="event-repo">${event.repoName} (${event.type})</div>
-                        <div class="event-time">${new Date(event.createdAt).toLocaleString()}</div>
-                        <pre>${event.payload.substring(0, 200)}...</pre>
-                    `;
+                    const eventElement = createEventElement(
+                        event.repoName,
+                        event.type,
+                        event.createdAt,
+                        event.payload
+                    );
                     eventsContainer.appendChild(eventElement);
                 });
             });

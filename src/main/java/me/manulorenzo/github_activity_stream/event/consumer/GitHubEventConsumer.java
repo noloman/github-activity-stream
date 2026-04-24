@@ -1,6 +1,7 @@
 package me.manulorenzo.github_activity_stream.event.consumer;
 
 import me.manulorenzo.github_activity_stream.domain.GitHubEvent;
+import me.manulorenzo.github_activity_stream.dto.GitHubEventResponseDto;
 import me.manulorenzo.github_activity_stream.entity.GitHubEventEntity;
 import me.manulorenzo.github_activity_stream.mapper.GitHubEventMapper;
 import me.manulorenzo.github_activity_stream.repository.GitHubEventRepository;
@@ -34,8 +35,8 @@ public class GitHubEventConsumer {
             GitHubEvent gitHubEvent = objectMapper.readValue(eventJson, GitHubEvent.class);
             GitHubEventEntity gitHubEventEntity = gitHubEventMapper.toEntity(gitHubEvent, eventJson, Instant.now());
             gitHubEventRepository.save(gitHubEventEntity);
-
-            simpMessagingTemplate.convertAndSend("/topic/github-events", eventJson);
+            GitHubEventResponseDto gitHubEventResponseDto = gitHubEventMapper.toResponseDto(gitHubEventEntity);
+            simpMessagingTemplate.convertAndSend("/topic/github-events", gitHubEventResponseDto);
         } catch (Exception e) {
             System.err.println("Error processing event: " + e.getMessage());
             e.printStackTrace();

@@ -298,4 +298,4 @@ These are valuable later-stage improvements for production-readiness and deeper 
 
 ## Current Scope
 
-This is a learning project, not a production-ready GitHub analytics system. The core pipeline is intentionally simple so each moving part is easy to inspect, run, and extend.
+This service focuses on a clear, maintainable event-ingestion pipeline rather than a full GitHub analytics platform. The current implementation prioritizes a small operational surface area, straightforward deployment, and incremental hardening over broad product scope.

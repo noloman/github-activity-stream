@@ -2,7 +2,7 @@
 
 A Spring Boot application that streams public GitHub activity in near real time. It polls the GitHub public events API, publishes events to Kafka, consumes them back into the application, stores them in PostgreSQL, exposes query endpoints, and broadcasts live updates to a small browser dashboard through WebSockets.
 
-This project is intentionally useful as a learning playground for event-driven backend development with Spring Boot, Kafka, WebSockets, Flyway, JPA, and PostgreSQL.
+The project is designed with production-oriented backend practices in mind, with a focus on reliable event processing, clear operational behavior, and maintainable service boundaries.
 
 ## What It Does
 
@@ -247,29 +247,25 @@ For public-repo safety, the default configuration does not require a token and r
 
 When GitHub returns a rate-limit response, the poller now reads `Retry-After` and `X-RateLimit-Reset` headers and pauses until GitHub says it can resume. According to GitHub's REST API docs, unauthenticated requests are typically limited to 60 requests per hour per IP, while authenticated requests typically get 5,000 requests per hour. Sources: https://docs.github.com/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28 and https://docs.github.com/en/rest/rate-limit
 
-## Learning-Focused Future Improvements
+## Future Improvements
 
-The list below is prioritized for learning value and practical impact. Start with the high-priority items before moving into broader production-readiness topics.
+The list below is prioritized by correctness, resilience, and operational value. Start with the high-priority items before moving into broader platform improvements.
 
-### Priority 1: Correctness and Developer Feedback
+### Priority 1: Correctness and Data Integrity
 
-These are the best first improvements because they make the current application easier to trust and change safely.
+These are the most important next improvements because they directly affect confidence in stored data and the ability to change the application safely.
 
-- Fix the dashboard's historical fetch path so it uses the current `/api/v1/events/recent` endpoint.
-- Add validation for query parameters such as page size, event type, and recency range.
-- Add global exception handling with meaningful API error responses.
 - Add unit tests for the service, mapper, controller, and Kafka consumer layers.
-- Add integration tests with Testcontainers for Kafka and PostgreSQL.
 - Store the GitHub event `created_at` value from the API instead of only the ingestion timestamp.
 - Deduplicate GitHub events by GitHub event ID to avoid storing repeated poll results.
+- Add integration tests with Testcontainers for Kafka and PostgreSQL.
 
-### Priority 2: Resilience and Event Processing
+### Priority 2: Resilience and Operations
 
-These improvements teach the reliability patterns that matter in event-driven systems.
+These improvements strengthen runtime behavior under failure conditions and make the service easier to operate in production.
 
-- Replace `System.err.println` with structured logging.
-- Add retry and backoff behavior for GitHub API failures and Kafka publishing failures.
-- Handle GitHub API rate limits explicitly, including response headers and cooldown behavior.
+- Replace remaining `System.err.println` calls with structured logging.
+- Add retry and backoff behavior for Kafka publishing failures and other transient failures.
 - Add a dead-letter topic for events that cannot be deserialized or persisted.
 - Add event processing workflows that update the `processed` field.
 

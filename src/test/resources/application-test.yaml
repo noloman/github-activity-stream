@@ -17,3 +17,4 @@ spring:
 github:
   public-events:
     enabled: false
+    auth-token:

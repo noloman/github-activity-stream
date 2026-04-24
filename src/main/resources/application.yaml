@@ -23,3 +23,12 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+
+github:
+  public-events:
+    enabled: true
+    api-url: https://api.github.com/events
+    poll-interval: 5s
+    api-version: 2022-11-28
+    user-agent: github-activity-stream
+    auth-token: ${GITHUB_TOKEN:}

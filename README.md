@@ -72,6 +72,13 @@ Run the application:
 ./mvnw spring-boot:run
 ```
 
+If GitHub rate-limits your IP, provide a personal access token through an environment variable before starting the app:
+
+```bash
+export GITHUB_TOKEN=your_github_token
+./mvnw spring-boot:run
+```
+
 Open the dashboard:
 
 ```text
@@ -87,6 +94,7 @@ The application expects:
 - Database password `password`
 
 These defaults are defined in `src/main/resources/application.yaml` and `docker-compose.yaml`.
+The GitHub poller also supports optional authentication and poll tuning through `github.public-events.*` properties.
 
 ## API Endpoints
 
@@ -226,9 +234,18 @@ The scheduled GitHub polling service is controlled by:
 github:
   public-events:
     enabled: true
+    api-url: https://api.github.com/events
+    poll-interval: 5s
+    api-version: 2022-11-28
+    user-agent: github-activity-stream
+    auth-token: ${GITHUB_TOKEN:}
 ```
 
 It is enabled by default. Set it to `false` in a profile if you want to run the app without polling GitHub.
+
+For public-repo safety, the default configuration does not require a token and reads `GITHUB_TOKEN` only if you provide it in the environment. This keeps secrets out of the repository while allowing authenticated requests when you need GitHub's higher rate limit.
+
+When GitHub returns a rate-limit response, the poller now reads `Retry-After` and `X-RateLimit-Reset` headers and pauses until GitHub says it can resume. According to GitHub's REST API docs, unauthenticated requests are typically limited to 60 requests per hour per IP, while authenticated requests typically get 5,000 requests per hour. Sources: https://docs.github.com/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28 and https://docs.github.com/en/rest/rate-limit
 
 ## Learning-Focused Future Improvements
 

@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 public class GithubActivityStreamApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(GithubActivityStreamApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(GithubActivityStreamApplication.class, args);
+  }
 }

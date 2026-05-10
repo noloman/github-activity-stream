@@ -46,6 +46,7 @@ class GitHubEventControllerTest {
     GitHubEventResponseDto event =
         new GitHubEventResponseDto(
             1L,
+            "123456789",
             "PushEvent",
             "owner/repo",
             "manu",
@@ -60,6 +61,7 @@ class GitHubEventControllerTest {
         .perform(get("/api/v1/events").param("page", "0").param("size", "10"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content[0].id").value(1))
+        .andExpect(jsonPath("$.content[0].gitHubEventId").value("123456789"))
         .andExpect(jsonPath("$.content[0].type").value("PushEvent"))
         .andExpect(jsonPath("$.content[0].repoName").value("owner/repo"))
         .andExpect(jsonPath("$.content[0].actorLogin").value("manu"))

@@ -6,10 +6,13 @@ import me.manulorenzo.github_activity_stream.dto.GitHubEventResponseDto;
 import me.manulorenzo.github_activity_stream.entity.GitHubEventEntity;
 import me.manulorenzo.github_activity_stream.mapper.GitHubEventMapper;
 import me.manulorenzo.github_activity_stream.repository.GitHubEventRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import tools.jackson.databind.ObjectMapper;
+
 @Slf4j
 @Component
 public class GitHubEventConsumer {
@@ -33,11 +36,20 @@ public class GitHubEventConsumer {
   public void consume(String eventJson) {
     try {
       GitHubEvent gitHubEvent = objectMapper.readValue(eventJson, GitHubEvent.class);
+      if (StringUtils.hasText(gitHubEvent.getId())
+          && gitHubEventRepository.existsByGitHubEventId(gitHubEvent.getId())) {
+        log.debug("Skipping duplicate GitHub event {}", gitHubEvent.getId());
+        return;
+      }
+
       GitHubEventEntity gitHubEventEntity = gitHubEventMapper.toEntity(gitHubEvent, eventJson);
+      gitHubEventEntity.setProcessed(true); // Set processed to true
       gitHubEventRepository.save(gitHubEventEntity);
       GitHubEventResponseDto gitHubEventResponseDto =
           gitHubEventMapper.toResponseDto(gitHubEventEntity);
       simpMessagingTemplate.convertAndSend("/topic/github-events", gitHubEventResponseDto);
+    } catch (DataIntegrityViolationException e) {
+      log.debug("Skipping GitHub event that was already persisted", e);
     } catch (Exception e) {
       log.error("Error processing event: ", e);
     }

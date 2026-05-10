@@ -2,6 +2,7 @@ package me.manulorenzo.github_activity_stream.repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import me.manulorenzo.github_activity_stream.entity.GitHubEventEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -15,4 +16,8 @@ public interface GitHubEventRepository
   List<GitHubEventEntity> findByCreatedAtAfter(Instant since);
 
   List<GitHubEventEntity> findByProcessed(boolean processed);
+
+  boolean existsByGitHubEventId(String gitHubEventId);
+
+  Optional<GitHubEventEntity> findByGitHubEventId(String gitHubEventId);
 }

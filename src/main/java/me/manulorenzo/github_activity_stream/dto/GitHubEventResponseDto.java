@@ -12,6 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class GitHubEventResponseDto {
   private Long id;
+  private String gitHubEventId;
   private String type;
   private String repoName;
   private String actorLogin;

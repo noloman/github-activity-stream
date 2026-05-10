@@ -1,16 +1,14 @@
 package me.manulorenzo.github_activity_stream.mapper;
 
-import me.manulorenzo.github_activity_stream.domain.GitHubEvent;
-import me.manulorenzo.github_activity_stream.dto.GitHubEventResponseDto;
-import me.manulorenzo.github_activity_stream.entity.GitHubEventEntity;
-import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-
+import me.manulorenzo.github_activity_stream.domain.GitHubEvent;
+import me.manulorenzo.github_activity_stream.dto.GitHubEventResponseDto;
+import me.manulorenzo.github_activity_stream.entity.GitHubEventEntity;
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 class GitHubEventMapperTest {
 
@@ -52,6 +50,7 @@ class GitHubEventMapperTest {
     void toResponseDtoMapsEntityToDto() {
         GitHubEventEntity entity = new GitHubEventEntity();
         entity.setId(1L);
+        entity.setGitHubEventId("123456789");
         entity.setType("PushEvent");
         entity.setRepoName("repoName");
         entity.setActorLogin("actorLogin");
@@ -63,6 +62,7 @@ class GitHubEventMapperTest {
         GitHubEventResponseDto dto = mapper.toResponseDto(entity);
 
         assertThat(dto.getId()).isEqualTo(1L);
+        assertThat(dto.getGitHubEventId()).isEqualTo("123456789");
         assertThat(dto.getType()).isEqualTo("PushEvent");
         assertThat(dto.getRepoName()).isEqualTo("repoName");
         assertThat(dto.getActorLogin()).isEqualTo("actorLogin");
@@ -75,6 +75,7 @@ class GitHubEventMapperTest {
     void toResponseDtosMapsEntityListToDtoList() {
         GitHubEventEntity entity = new GitHubEventEntity();
         entity.setId(1L);
+        entity.setGitHubEventId("123456789");
         entity.setType("PushEvent");
         entity.setRepoName("repoName1");
         entity.setActorLogin("actorLogin1");
@@ -85,6 +86,7 @@ class GitHubEventMapperTest {
 
         GitHubEventEntity entity2 = new GitHubEventEntity();
         entity2.setId(2L);
+        entity2.setGitHubEventId("987654321");
         entity2.setType("PullRequestEvent");
         entity2.setRepoName("repoName2");
         entity2.setActorLogin("actorLogin2");
@@ -98,6 +100,7 @@ class GitHubEventMapperTest {
         assertThat(dtos).hasSize(2);
         GitHubEventResponseDto gitHubEventResponseDto = dtos.getFirst();
         assertThat(gitHubEventResponseDto.getId()).isEqualTo(1L);
+        assertThat(gitHubEventResponseDto.getGitHubEventId()).isEqualTo("123456789");
         assertThat(gitHubEventResponseDto.getType()).isEqualTo("PushEvent");
         assertThat(gitHubEventResponseDto.getRepoName()).isEqualTo("repoName1");
         assertThat(gitHubEventResponseDto.getActorLogin()).isEqualTo("actorLogin1");
@@ -107,12 +110,12 @@ class GitHubEventMapperTest {
 
         GitHubEventResponseDto gitHubEventResponseDto1 = dtos.get(1);
         assertThat(gitHubEventResponseDto1.getId()).isEqualTo(2L);
+        assertThat(gitHubEventResponseDto1.getGitHubEventId()).isEqualTo("987654321");
         assertThat(gitHubEventResponseDto1.getType()).isEqualTo("PullRequestEvent");
         assertThat(gitHubEventResponseDto1.getRepoName()).isEqualTo("repoName2");
         assertThat(gitHubEventResponseDto1.getActorLogin()).isEqualTo("actorLogin2");
         assertThat(gitHubEventResponseDto1.getPayload()).isEqualTo("{\"action\":\"opened\"}");
         assertThat(gitHubEventResponseDto1.getCreatedAt()).isEqualTo(createdAt2);
         assertThat(gitHubEventResponseDto1.isProcessed()).isTrue();
-
     }
 }

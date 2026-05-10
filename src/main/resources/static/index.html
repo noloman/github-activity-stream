@@ -1,145 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>GitHub Public Events Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        #events { margin-top: 20px; }
-        .event {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-        }
-        .event-repo { font-weight: bold; margin-bottom: 5px; color: #2c3e50; }
-        .event-type { color: #fff; padding: 3px 6px; border-radius: 3px; display: inline-block; margin-right: 10px; }
-        .event-type.PushEvent { background-color: #3498db; }
-        .event-type.IssuesEvent { background-color: #e74c3c; }
-        .event-type.PullRequestEvent { background-color: #2ecc71; }
-        .event-time { color: #7f8c8d; font-size: 0.9em; float: right; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Activity Stream</title>
+    <link rel="stylesheet" href="/css/theme.css">
+    <link rel="stylesheet" href="/css/layout.css">
+    <link rel="stylesheet" href="/css/components.css">
 </head>
 <body>
-<h1>🚀 GitHub Public Events Dashboard</h1>
-<div>
-    <label for="event-type-filter">Filter by Event Type:</label>
-    <select id="event-type-filter" onchange="filterEvents()">
-        <option value="">All Event Types</option>
-        <option value="PushEvent">Pushes</option>
-        <option value="IssuesEvent">Issues</option>
-        <option value="PullRequestEvent">Pull Requests</option>
-        <option value="WatchEvent">Stars</option>
-    </select>
-</div>
-<div id="historical-events"></div>
-<div id="events"></div>
+<div class="app-shell">
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.58 2 12.24c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.49v-1.72c-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.1-1.49-1.1-1.49-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.04 1.03-2.75-.1-.26-.45-1.31.1-2.72 0 0 .84-.28 2.75 1.05A9.25 9.25 0 0 1 12 6.95c.85 0 1.7.12 2.5.34 1.9-1.33 2.74-1.05 2.74-1.05.55 1.41.2 2.46.1 2.72.64.71 1.03 1.63 1.03 2.75 0 3.94-2.34 4.8-4.57 5.06.36.32.68.94.68 1.9v2.78c0 .27.18.59.69.49A10.18 10.18 0 0 0 22 12.24C22 6.58 17.52 2 12 2Z"/>
+                </svg>
+            </span>
+            <div>
+                <h1>GitHub Activity Stream</h1>
+                <p>Public events pipeline</p>
+            </div>
+        </div>
 
-<!-- WebSocket Libraries -->
+        <div class="header-actions">
+            <div id="connectionStatus" class="connection-state" aria-live="polite">
+                <span class="state-dot"></span>
+                <span data-label>Connecting</span>
+            </div>
+            <button id="refreshButton" class="button button-secondary" type="button">
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                    <path d="M21 12a9 9 0 1 1-2.64-6.36M21 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Refresh
+            </button>
+            <button id="pauseButton" class="button icon-only" type="button" aria-label="Pause live updates" title="Pause live updates">
+                <svg id="pauseIcon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                    <path d="M8 5v14M16 5v14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="workspace">
+        <aside class="sidebar" aria-label="Filters">
+            <section class="filter-section">
+                <label class="control-label" for="searchInput">Search</label>
+                <input id="searchInput" class="input" type="search" placeholder="Repository, actor, event ID">
+            </section>
+
+            <section class="filter-section">
+                <div class="section-heading">
+                    <span>Event type</span>
+                    <button id="clearTypeButton" class="link-button" type="button">Reset</button>
+                </div>
+                <div id="typeFilters" class="filter-list"></div>
+            </section>
+
+            <section class="filter-section two-column">
+                <div>
+                    <label class="control-label" for="timeRange">Window</label>
+                    <select id="timeRange" class="input">
+                        <option value="1">1 hour</option>
+                        <option value="6">6 hours</option>
+                        <option value="24">24 hours</option>
+                        <option value="168">7 days</option>
+                    </select>
+                </div>
+                <button id="processedToggle" class="toggle-card" type="button" aria-pressed="false">
+                    <span>Unprocessed</span>
+                    <strong id="unprocessedCount">0</strong>
+                </button>
+            </section>
+
+            <section class="runtime-note" aria-live="polite">
+                <span class="note-label">Runtime</span>
+                <p id="messageBox">Waiting for stored events.</p>
+            </section>
+        </aside>
+
+        <section class="content">
+            <section class="overview-grid" aria-label="Pipeline summary">
+                <article class="metric">
+                    <span>Visible</span>
+                    <strong id="visibleMetric">0</strong>
+                    <small id="loadedMetric">0 loaded</small>
+                </article>
+                <article class="metric">
+                    <span>Live</span>
+                    <strong id="liveMetric">0</strong>
+                    <small>This session</small>
+                </article>
+                <article class="metric">
+                    <span>Repositories</span>
+                    <strong id="repoMetric">0</strong>
+                    <small>Current filter</small>
+                </article>
+                <article class="metric">
+                    <span>Processed</span>
+                    <strong id="processedMetric">0%</strong>
+                    <small>Current filter</small>
+                </article>
+            </section>
+
+            <section class="analysis-grid">
+                <article class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Event throughput</h2>
+                            <p>Hourly buckets from GitHub event creation time</p>
+                        </div>
+                    </div>
+                    <div id="activityChart" class="chart-region"></div>
+                </article>
+                <article class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Type distribution</h2>
+                            <p>Current filter mix</p>
+                        </div>
+                    </div>
+                    <div id="typeChart" class="chart-region"></div>
+                </article>
+            </section>
+
+            <section class="panel table-panel">
+                <div class="table-toolbar">
+                    <div>
+                        <h2>Events</h2>
+                        <p id="tableSubtitle">No events loaded yet</p>
+                    </div>
+                    <span id="tableCount" class="row-count">0 rows</span>
+                </div>
+                <div class="table-scroll">
+                    <table class="events-table">
+                        <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Repository</th>
+                            <th>Actor</th>
+                            <th>Created</th>
+                            <th>GitHub ID</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="eventsTable"></tbody>
+                    </table>
+                    <div id="emptyTable" class="empty-state is-hidden">No events match the current filters.</div>
+                </div>
+            </section>
+        </section>
+
+        <aside class="inspector" aria-label="Selected event">
+            <div class="inspector-header">
+                <div>
+                    <span class="eyebrow">Selected event</span>
+                    <h2 id="detailTitle">No selection</h2>
+                </div>
+                <span id="detailType" class="type-token neutral">None</span>
+            </div>
+            <div id="detailBody" class="inspector-body">
+                <div class="empty-state">Select a row to inspect repository, actor, timestamps, event ID, and payload.</div>
+            </div>
+        </aside>
+    </main>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-
-<script>
-    const socket = new SockJS('/ws');
-    const stompClient = Stomp.over(socket);
-    let allEvents = [];
-
-    stompClient.connect({}, function() {
-        console.log("Connected to WebSocket!");
-        stompClient.subscribe('/topic/github-events', function(message) {
-            const event = JSON.parse(message.body);
-            allEvents.unshift(event); // Add to the beginning of the array
-            renderEvents();
-        });
-    });
-
-    function formatPayload(payload) {
-        try {
-            return JSON.stringify(JSON.parse(payload), null, 2);
-        } catch (error) {
-            console.error('Failed to parse payload JSON', error);
-            return payload;
-        }
-    }
-
-    function createEventElement(repoName, type, createdAt, payload) {
-        const eventElement = document.createElement('div');
-        eventElement.className = 'event';
-
-        const header = document.createElement('div');
-
-        const typeElement = document.createElement('span');
-        typeElement.className = `event-type ${type}`;
-        typeElement.textContent = type;
-
-        const timeElement = document.createElement('span');
-        timeElement.className = 'event-time';
-        timeElement.textContent = new Date(createdAt).toLocaleString();
-
-        header.appendChild(typeElement);
-        header.appendChild(timeElement);
-
-        const repoElement = document.createElement('div');
-        repoElement.className = 'event-repo';
-        repoElement.textContent = repoName;
-
-        const payloadElement = document.createElement('pre');
-        payloadElement.style.marginTop = '5px';
-        payloadElement.style.fontSize = '0.85em';
-        payloadElement.style.maxHeight = '200px';
-        payloadElement.style.overflow = 'auto';
-        payloadElement.textContent = formatPayload(payload);
-
-        eventElement.appendChild(header);
-        eventElement.appendChild(repoElement);
-        eventElement.appendChild(payloadElement);
-
-        return eventElement;
-    }
-
-    function renderEvents() {
-        const filter = document.getElementById('event-type-filter').value;
-        const eventsContainer = document.getElementById('events');
-        eventsContainer.innerHTML = '';
-
-        allEvents
-            .filter(event => filter === '' || event.type === filter)
-            .slice(0, 50) // Show max 50 events
-            .forEach(event => {
-                const eventElement = createEventElement(
-                    event.repoName,
-                    event.type,
-                    event.createdAt,
-                    event.payload
-                );
-                eventsContainer.appendChild(eventElement);
-            });
-    }
-
-    function filterEvents() {
-        renderEvents();
-    }
-    // Fetch and display historical events
-    function fetchHistoricalEvents() {
-        fetch('/api/v1/events/recent?hours=1')
-            .then(response => response.json())
-            .then(events => {
-                const eventsContainer = document.getElementById('historical-events');
-                eventsContainer.innerHTML = '<h2>Recent Events (Last Hour)</h2>';
-                events.forEach(event => {
-                    const eventElement = createEventElement(
-                        event.repoName,
-                        event.type,
-                        event.createdAt,
-                        event.payload
-                    );
-                    eventsContainer.appendChild(eventElement);
-                });
-            });
-    }
-
-    // Call this function when the page loads
-    window.onload = fetchHistoricalEvents;
-</script>
+<script type="module" src="/js/app.js"></script>
 </body>
 </html>

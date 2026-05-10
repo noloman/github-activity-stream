@@ -1,0 +1,142 @@
+.app-shell {
+    min-height: 100vh;
+}
+
+.app-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 58px;
+    padding: 10px 18px;
+    background: rgba(255, 255, 255, 0.94);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(14px);
+}
+
+.brand,
+.header-actions,
+.section-heading,
+.table-toolbar,
+.inspector-header {
+    display: flex;
+    align-items: center;
+}
+
+.brand {
+    gap: 10px;
+    min-width: 220px;
+}
+
+.brand h1 {
+    margin: 0;
+    color: var(--text-strong);
+    font-size: 16px;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.brand p {
+    margin: 2px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.header-actions {
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.workspace {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 340px;
+    gap: 14px;
+    width: 100%;
+    max-width: 1720px;
+    margin: 0 auto;
+    padding: 14px;
+}
+
+.sidebar,
+.content,
+.inspector {
+    min-width: 0;
+}
+
+.sidebar,
+.inspector {
+    position: sticky;
+    top: 72px;
+    align-self: start;
+}
+
+.content {
+    display: grid;
+    gap: 14px;
+}
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.analysis-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.8fr);
+    gap: 14px;
+}
+
+@media (max-width: 1220px) {
+    .workspace {
+        grid-template-columns: 240px minmax(0, 1fr);
+    }
+
+    .inspector {
+        grid-column: 1 / -1;
+        position: static;
+    }
+}
+
+@media (max-width: 880px) {
+    body {
+        overflow-x: hidden;
+    }
+
+    .app-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .workspace,
+    .overview-grid,
+    .analysis-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .workspace {
+        padding: 10px;
+    }
+
+    .sidebar {
+        position: static;
+        order: 2;
+    }
+
+    .content {
+        order: 1;
+    }
+
+    .inspector {
+        order: 3;
+    }
+}

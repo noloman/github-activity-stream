@@ -11,7 +11,7 @@ The project is designed with production-oriented backend practices in mind, with
 - Consumes Kafka messages and persists them to PostgreSQL.
 - Broadcasts live event payloads to WebSocket subscribers on `/topic/github-events`.
 - Exposes REST endpoints for querying stored events by page, repository, type, recency, and processing state.
-- Serves a simple static dashboard from `src/main/resources/static/index.html`.
+- Serves a modular static operations dashboard from `src/main/resources/static`.
 
 ## Tech Stack
 
@@ -148,7 +148,20 @@ Clients subscribe to:
 /topic/github-events
 ```
 
-The static dashboard uses SockJS and STOMP to receive live events in the browser.
+The static dashboard uses SockJS and STOMP to receive live events in the browser. It also loads recent stored events from the REST API, supports filtering by event type, text search, time range, and processing state, and shows summary metrics, charts, a table, and a detail panel for selected events.
+
+The dashboard is intentionally split into small frontend modules:
+
+- `index.html` defines the application shell.
+- `css/theme.css` defines reusable color, spacing, and typography tokens.
+- `css/layout.css` defines page-level structure and responsive behavior.
+- `css/components.css` defines dashboard component styling.
+- `js/api.js` handles REST API calls.
+- `js/state.js` owns client-side filter and event state.
+- `js/views.js` renders dashboard sections.
+- `js/charts.js` renders lightweight SVG charts.
+- `js/format.js` centralizes display formatting.
+- `js/app.js` wires fetch, WebSocket streaming, events, and refresh behavior.
 
 ## Database
 
@@ -157,6 +170,7 @@ Flyway creates the `github_events` table on startup.
 Stored fields include:
 
 - `id`
+- `github_event_id`
 - `type`
 - `repo_name`
 - `actor_login`
@@ -164,7 +178,7 @@ Stored fields include:
 - `payload`
 - `processed`
 
-Indexes are created for common lookups by repository, event type, creation time, and processing state.
+Indexes are created for common lookups by repository, GitHub event ID, event type, creation time, and processing state.
 
 ## Running Tests
 
@@ -222,8 +236,20 @@ src/main/java/me/manulorenzo/github_activity_stream
 
 src/main/resources
 ├── application.yaml
-├── db/V1__Create_github_database_events_table.sql
-└── static/index.html
+├── db/migration
+└── static
+    ├── index.html
+    ├── css
+    │   ├── theme.css
+    │   ├── layout.css
+    │   └── components.css
+    └── js
+        ├── api.js
+        ├── app.js
+        ├── charts.js
+        ├── format.js
+        ├── state.js
+        └── views.js
 ```
 
 ## Configuration Notes
@@ -247,6 +273,18 @@ For public-repo safety, the default configuration does not require a token and r
 
 When GitHub returns a rate-limit response, the poller now reads `Retry-After` and `X-RateLimit-Reset` headers and pauses until GitHub says it can resume. According to GitHub's REST API docs, unauthenticated requests are typically limited to 60 requests per hour per IP, while authenticated requests typically get 5,000 requests per hour. Sources: https://docs.github.com/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28 and https://docs.github.com/en/rest/rate-limit
 
+## Completed Improvements
+
+These roadmap items are now implemented:
+
+- Store GitHub's public event ID in `github_event_id`.
+- Store GitHub's API `created_at` timestamp instead of the local ingestion timestamp.
+- Expose the GitHub event ID in API and WebSocket response DTOs.
+- Deduplicate GitHub events by GitHub event ID before storing repeated poll results.
+- Run Flyway migrations through Spring Boot 4's Flyway starter and PostgreSQL database module.
+- Replace the Kafka consumer's `System.err.println` and stack trace printing with structured logging.
+- Improve the dashboard with recent historical loading, live updates, filters, metrics, charts, table selection, event detail views, and modular frontend code.
+
 ## Future Improvements
 
 The list below is prioritized by correctness, resilience, and operational value. Start with the high-priority items before moving into broader platform improvements.
@@ -255,16 +293,13 @@ The list below is prioritized by correctness, resilience, and operational value.
 
 These are the most important next improvements because they directly affect confidence in stored data and the ability to change the application safely.
 
-- Add unit tests for the service, mapper, controller, and Kafka consumer layers.
-- Store the GitHub event `created_at` value from the API instead of only the ingestion timestamp.
-- Deduplicate GitHub events by GitHub event ID to avoid storing repeated poll results.
+- Add unit tests for the service and Kafka consumer layers.
 - Add integration tests with Testcontainers for Kafka and PostgreSQL.
 
 ### Priority 2: Resilience and Operations
 
 These improvements strengthen runtime behavior under failure conditions and make the service easier to operate in production.
 
-- Replace remaining `System.err.println` calls with structured logging.
 - Add retry and backoff behavior for Kafka publishing failures and other transient failures.
 - Add a dead-letter topic for events that cannot be deserialized or persisted.
 - Add event processing workflows that update the `processed` field.
@@ -282,9 +317,9 @@ These make the application easier to operate, inspect, and consume.
 
 These are useful once the backend behavior is stable.
 
-- Improve the dashboard with historical event loading, reconnect handling, and richer filters.
-- Show connection state, empty states, and error states in the dashboard.
-- Add event detail views for large payloads instead of rendering all JSON inline.
+- Add stronger dashboard reconnect handling and pagination for large stored event sets.
+- Add richer dashboard charts for repository and actor trends.
+- Add deep links for selected events and saved filter presets.
 
 ### Priority 5: Packaging, Security, and Advanced Topics
 

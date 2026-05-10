@@ -9,6 +9,7 @@ The project is designed with production-oriented backend practices in mind, with
 - Polls `https://api.github.com/events` every 5 seconds.
 - Publishes each GitHub event to the Kafka topic `github-public-events`.
 - Consumes Kafka messages and persists them to PostgreSQL.
+- Stores GitHub's original event ID and `created_at` timestamp for stable deduplication and accurate event-time queries.
 - Broadcasts live event payloads to WebSocket subscribers on `/topic/github-events`.
 - Exposes REST endpoints for querying stored events by page, repository, type, recency, and processing state.
 - Serves a modular static operations dashboard from `src/main/resources/static`.
@@ -85,6 +86,8 @@ Open the dashboard:
 http://localhost:8080
 ```
 
+The dashboard loads recent stored events immediately and then subscribes to live WebSocket updates. If the screen is empty, check that Docker Compose is running, the Spring Boot app is running, and GitHub is not currently rate-limiting the poller.
+
 The application expects:
 
 - Kafka at `localhost:9092`
@@ -148,7 +151,28 @@ Clients subscribe to:
 /topic/github-events
 ```
 
+## Dashboard
+
 The static dashboard uses SockJS and STOMP to receive live events in the browser. It also loads recent stored events from the REST API, supports filtering by event type, text search, time range, and processing state, and shows summary metrics, charts, a table, and a detail panel for selected events.
+
+Desktop view:
+
+![Desktop dashboard showing filters, metrics, event charts, event table, and selected event inspector](docs/images/dashboard-desktop.png)
+
+Mobile view:
+
+![Mobile dashboard showing responsive metrics and chart layout](docs/images/dashboard-mobile.png)
+
+Current dashboard capabilities:
+
+- Loads recent historical events from `/api/v1/events/recent`.
+- Receives live events through `/topic/github-events`.
+- Shows visible events, live events received in the current browser session, repository count, and processed percentage.
+- Charts event throughput by GitHub creation time and event type distribution.
+- Filters by event type, text search, time window, and unprocessed state.
+- Displays a selectable events table with event type, repository, actor, GitHub creation time, GitHub event ID, and processing status.
+- Shows an event inspector with repository, actor, GitHub event ID, internal row ID, and formatted payload JSON.
+- Supports pausing live updates in the browser without stopping ingestion.
 
 The dashboard is intentionally split into small frontend modules:
 
@@ -180,6 +204,8 @@ Stored fields include:
 
 Indexes are created for common lookups by repository, GitHub event ID, event type, creation time, and processing state.
 
+Existing local databases are upgraded through Flyway. The second migration adds `github_event_id` for databases created before GitHub event metadata was persisted.
+
 ## Running Tests
 
 ```bash
@@ -187,6 +213,8 @@ Indexes are created for common lookups by repository, GitHub event ID, event typ
 ```
 
 The test profile uses an in-memory H2 database, disables Flyway, disables the scheduled GitHub poller, and prevents Kafka listeners from auto-starting.
+
+Current coverage includes mapper tests, REST controller tests, application context loading, and consumer persistence tests for processed events and duplicate GitHub event IDs.
 
 ## Useful Development Commands
 
@@ -250,6 +278,10 @@ src/main/resources
         ├── format.js
         ├── state.js
         └── views.js
+
+docs/images
+├── dashboard-desktop.png
+└── dashboard-mobile.png
 ```
 
 ## Configuration Notes
@@ -282,8 +314,10 @@ These roadmap items are now implemented:
 - Expose the GitHub event ID in API and WebSocket response DTOs.
 - Deduplicate GitHub events by GitHub event ID before storing repeated poll results.
 - Run Flyway migrations through Spring Boot 4's Flyway starter and PostgreSQL database module.
+- Move database migrations into Spring Boot's default `db/migration` Flyway location.
 - Replace the Kafka consumer's `System.err.println` and stack trace printing with structured logging.
 - Improve the dashboard with recent historical loading, live updates, filters, metrics, charts, table selection, event detail views, and modular frontend code.
+- Add README screenshots for desktop and mobile dashboard states.
 
 ## Future Improvements
 
@@ -293,7 +327,7 @@ The list below is prioritized by correctness, resilience, and operational value.
 
 These are the most important next improvements because they directly affect confidence in stored data and the ability to change the application safely.
 
-- Add unit tests for the service and Kafka consumer layers.
+- Add unit tests for the service layer and remaining edge cases in the Kafka consumer.
 - Add integration tests with Testcontainers for Kafka and PostgreSQL.
 
 ### Priority 2: Resilience and Operations

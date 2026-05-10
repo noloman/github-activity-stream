@@ -1,6 +1,5 @@
 package me.manulorenzo.github_activity_stream.mapper;
 
-import java.time.Instant;
 import java.util.List;
 import me.manulorenzo.github_activity_stream.domain.GitHubEvent;
 import me.manulorenzo.github_activity_stream.dto.GitHubEventResponseDto;
@@ -18,7 +17,8 @@ public interface GitHubEventMapper {
   @Mapping(target = "repoName", source = "event.repo.name")
   @Mapping(target = "actorLogin", source = "event.actor.login")
   @Mapping(target = "payload", source = "payloadJson")
-  @Mapping(target = "createdAt", source = "createdAt")
+  @Mapping(target = "gitHubEventId", source = "event.id")
+  @Mapping(target = "createdAt", source = "event.createdAt")
   @Mapping(target = "processed", constant = "false")
-  GitHubEventEntity toEntity(GitHubEvent event, String payloadJson, Instant createdAt);
+  GitHubEventEntity toEntity(GitHubEvent event, String payloadJson);
 }

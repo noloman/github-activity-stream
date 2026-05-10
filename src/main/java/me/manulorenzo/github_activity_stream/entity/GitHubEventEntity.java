@@ -15,10 +15,12 @@ import lombok.Setter;
 @Entity
 @Table(name = "github_events")
 public class GitHubEventEntity {
-  // Getters and setters
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(name="github_event_id", nullable = false, unique = true)
+  private String gitHubEventId;
 
   @Column(name = "type", nullable = false)
   private String type;

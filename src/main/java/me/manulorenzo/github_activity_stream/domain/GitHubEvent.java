@@ -1,6 +1,9 @@
 package me.manulorenzo.github_activity_stream.domain;
 
+import java.time.Instant;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,6 +18,10 @@ public class GitHubEvent {
   private Repo repo;
   private Map<String, Object> payload;
   private Actor actor;
+  private String Id;
+
+  @JsonProperty("created_at")
+  private Instant createdAt;
 
   @Getter
   @Setter

@@ -24,19 +24,22 @@ class GitHubEventMapperTest {
 
         GitHubEvent.Actor actor = new GitHubEvent.Actor();
         actor.setLogin("actorLogin");
+        Instant createdAt = Instant.parse("2023-01-01T00:00:00Z");
 
         GitHubEvent event = new GitHubEvent();
         event.setType("PushEvent");
         event.setRepo(repo);
+        event.setId("123456789");
         event.setActor(actor);
         event.setPayload(Map.of("ref", "refs/head/main"));
+        event.setCreatedAt(createdAt);
 
         String payloadJson = "{\"ref\":\"refs/head/main\"}";
-        Instant createdAt = Instant.parse("2023-01-01T00:00:00Z");
 
-        GitHubEventEntity entity = mapper.toEntity(event, payloadJson, createdAt);
+        GitHubEventEntity entity = mapper.toEntity(event, payloadJson);
 
         assertThat(entity.getId()).isNull();
+        assertThat(entity.getGitHubEventId()).isEqualTo("123456789");
         assertThat(entity.getType()).isEqualTo("PushEvent");
         assertThat(entity.getRepoName()).isEqualTo("repoName");
         assertThat(entity.getActorLogin()).isEqualTo("actorLogin");
@@ -93,7 +96,7 @@ class GitHubEventMapperTest {
         List<GitHubEventResponseDto> dtos = mapper.toResponseDtos(List.of(entity, entity2));
 
         assertThat(dtos).hasSize(2);
-        GitHubEventResponseDto gitHubEventResponseDto = dtos.get(0);
+        GitHubEventResponseDto gitHubEventResponseDto = dtos.getFirst();
         assertThat(gitHubEventResponseDto.getId()).isEqualTo(1L);
         assertThat(gitHubEventResponseDto.getType()).isEqualTo("PushEvent");
         assertThat(gitHubEventResponseDto.getRepoName()).isEqualTo("repoName1");

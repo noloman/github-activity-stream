@@ -1,6 +1,6 @@
 package me.manulorenzo.github_activity_stream.event.consumer;
 
-import java.time.Instant;
+import lombok.extern.slf4j.Slf4j;
 import me.manulorenzo.github_activity_stream.domain.GitHubEvent;
 import me.manulorenzo.github_activity_stream.dto.GitHubEventResponseDto;
 import me.manulorenzo.github_activity_stream.entity.GitHubEventEntity;
@@ -10,7 +10,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
-
+@Slf4j
 @Component
 public class GitHubEventConsumer {
   private final SimpMessagingTemplate simpMessagingTemplate;
@@ -33,15 +33,13 @@ public class GitHubEventConsumer {
   public void consume(String eventJson) {
     try {
       GitHubEvent gitHubEvent = objectMapper.readValue(eventJson, GitHubEvent.class);
-      GitHubEventEntity gitHubEventEntity =
-          gitHubEventMapper.toEntity(gitHubEvent, eventJson, Instant.now());
+      GitHubEventEntity gitHubEventEntity = gitHubEventMapper.toEntity(gitHubEvent, eventJson);
       gitHubEventRepository.save(gitHubEventEntity);
       GitHubEventResponseDto gitHubEventResponseDto =
           gitHubEventMapper.toResponseDto(gitHubEventEntity);
       simpMessagingTemplate.convertAndSend("/topic/github-events", gitHubEventResponseDto);
     } catch (Exception e) {
-      System.err.println("Error processing event: " + e.getMessage());
-      e.printStackTrace();
+      log.error("Error processing event: ", e);
     }
   }
 }

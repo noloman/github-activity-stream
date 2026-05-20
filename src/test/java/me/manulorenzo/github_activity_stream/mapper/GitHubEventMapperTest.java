@@ -1,121 +1,122 @@
 package me.manulorenzo.github_activity_stream.mapper;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import me.manulorenzo.github_activity_stream.domain.GitHubEvent;
 import me.manulorenzo.github_activity_stream.dto.GitHubEventResponseDto;
 import me.manulorenzo.github_activity_stream.entity.GitHubEventEntity;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 class GitHubEventMapperTest {
 
-    private final GitHubEventMapper mapper = Mappers.getMapper(GitHubEventMapper.class);
+  private final GitHubEventMapper mapper = Mappers.getMapper(GitHubEventMapper.class);
 
-    @Test
-    void toEntityMapsGithubEventToEntity() {
+  @Test
+  void toEntityMapsGithubEventToEntity() {
 
-        GitHubEvent.Repo repo = new GitHubEvent.Repo();
-        repo.setName("repoName");
+    GitHubEvent.Repo repo = new GitHubEvent.Repo();
+    repo.setName("repoName");
 
-        GitHubEvent.Actor actor = new GitHubEvent.Actor();
-        actor.setLogin("actorLogin");
-        Instant createdAt = Instant.parse("2023-01-01T00:00:00Z");
+    GitHubEvent.Actor actor = new GitHubEvent.Actor();
+    actor.setLogin("actorLogin");
+    Instant createdAt = Instant.parse("2023-01-01T00:00:00Z");
 
-        GitHubEvent event = new GitHubEvent();
-        event.setType("PushEvent");
-        event.setRepo(repo);
-        event.setId("123456789");
-        event.setActor(actor);
-        event.setPayload(Map.of("ref", "refs/head/main"));
-        event.setCreatedAt(createdAt);
+    GitHubEvent event = new GitHubEvent();
+    event.setType("PushEvent");
+    event.setRepo(repo);
+    event.setId("123456789");
+    event.setActor(actor);
+    event.setPayload(Map.of("ref", "refs/head/main"));
+    event.setCreatedAt(createdAt);
 
-        String payloadJson = "{\"ref\":\"refs/head/main\"}";
+    String payloadJson = "{\"ref\":\"refs/head/main\"}";
 
-        GitHubEventEntity entity = mapper.toEntity(event, payloadJson);
+    GitHubEventEntity entity = mapper.toEntity(event, payloadJson);
 
-        assertThat(entity.getId()).isNull();
-        assertThat(entity.getGitHubEventId()).isEqualTo("123456789");
-        assertThat(entity.getType()).isEqualTo("PushEvent");
-        assertThat(entity.getRepoName()).isEqualTo("repoName");
-        assertThat(entity.getActorLogin()).isEqualTo("actorLogin");
-        assertThat(entity.getPayload()).isEqualTo(payloadJson);
-        assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
-        assertThat(entity.isProcessed()).isFalse();
-    }
+    assertThat(entity.getId()).isNull();
+    assertThat(entity.getGitHubEventId()).isEqualTo("123456789");
+    assertThat(entity.getType()).isEqualTo("PushEvent");
+    assertThat(entity.getRepoName()).isEqualTo("repoName");
+    assertThat(entity.getActorLogin()).isEqualTo("actorLogin");
+    assertThat(entity.getPayload()).isEqualTo(payloadJson);
+    assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
+    assertThat(entity.isProcessed()).isFalse();
+  }
 
-    @Test
-    void toResponseDtoMapsEntityToDto() {
-        GitHubEventEntity entity = new GitHubEventEntity();
-        entity.setId(1L);
-        entity.setGitHubEventId("123456789");
-        entity.setType("PushEvent");
-        entity.setRepoName("repoName");
-        entity.setActorLogin("actorLogin");
-        entity.setPayload("{\"ref\":\"refs/head/main\"}");
-        Instant createdAt = Instant.parse("2023-01-01T00:00:00Z");
-        entity.setCreatedAt(createdAt);
-        entity.setProcessed(true);
+  @Test
+  void toResponseDtoMapsEntityToDto() {
+    GitHubEventEntity entity = new GitHubEventEntity();
+    entity.setId(1L);
+    entity.setGitHubEventId("123456789");
+    entity.setType("PushEvent");
+    entity.setRepoName("repoName");
+    entity.setActorLogin("actorLogin");
+    entity.setPayload("{\"ref\":\"refs/head/main\"}");
+    Instant createdAt = Instant.parse("2023-01-01T00:00:00Z");
+    entity.setCreatedAt(createdAt);
+    entity.setProcessed(true);
 
-        GitHubEventResponseDto dto = mapper.toResponseDto(entity);
+    GitHubEventResponseDto dto = mapper.toResponseDto(entity);
 
-        assertThat(dto.getId()).isEqualTo(1L);
-        assertThat(dto.getGitHubEventId()).isEqualTo("123456789");
-        assertThat(dto.getType()).isEqualTo("PushEvent");
-        assertThat(dto.getRepoName()).isEqualTo("repoName");
-        assertThat(dto.getActorLogin()).isEqualTo("actorLogin");
-        assertThat(dto.getPayload()).isEqualTo("{\"ref\":\"refs/head/main\"}");
-        assertThat(dto.getCreatedAt()).isEqualTo(createdAt);
-        assertThat(dto.isProcessed()).isTrue();
-    }
+    assertThat(dto.getId()).isEqualTo(1L);
+    assertThat(dto.getGitHubEventId()).isEqualTo("123456789");
+    assertThat(dto.getType()).isEqualTo("PushEvent");
+    assertThat(dto.getRepoName()).isEqualTo("repoName");
+    assertThat(dto.getActorLogin()).isEqualTo("actorLogin");
+    assertThat(dto.getPayload()).isEqualTo("{\"ref\":\"refs/head/main\"}");
+    assertThat(dto.getCreatedAt()).isEqualTo(createdAt);
+    assertThat(dto.isProcessed()).isTrue();
+  }
 
-    @Test
-    void toResponseDtosMapsEntityListToDtoList() {
-        GitHubEventEntity entity = new GitHubEventEntity();
-        entity.setId(1L);
-        entity.setGitHubEventId("123456789");
-        entity.setType("PushEvent");
-        entity.setRepoName("repoName1");
-        entity.setActorLogin("actorLogin1");
-        entity.setPayload("{\"ref\":\"refs/head/main\"}");
-        Instant createdAt1 = Instant.parse("2023-01-01T00:00:00Z");
-        entity.setCreatedAt(createdAt1);
-        entity.setProcessed(false);
+  @Test
+  void toResponseDtosMapsEntityListToDtoList() {
+    GitHubEventEntity entity = new GitHubEventEntity();
+    entity.setId(1L);
+    entity.setGitHubEventId("123456789");
+    entity.setType("PushEvent");
+    entity.setRepoName("repoName1");
+    entity.setActorLogin("actorLogin1");
+    entity.setPayload("{\"ref\":\"refs/head/main\"}");
+    Instant createdAt1 = Instant.parse("2023-01-01T00:00:00Z");
+    entity.setCreatedAt(createdAt1);
+    entity.setProcessed(false);
 
-        GitHubEventEntity entity2 = new GitHubEventEntity();
-        entity2.setId(2L);
-        entity2.setGitHubEventId("987654321");
-        entity2.setType("PullRequestEvent");
-        entity2.setRepoName("repoName2");
-        entity2.setActorLogin("actorLogin2");
-        entity2.setPayload("{\"action\":\"opened\"}");
-        Instant createdAt2 = Instant.parse("2023-01-02T00:00:00Z");
-        entity2.setCreatedAt(createdAt2);
-        entity2.setProcessed(true);
+    GitHubEventEntity entity2 = new GitHubEventEntity();
+    entity2.setId(2L);
+    entity2.setGitHubEventId("987654321");
+    entity2.setType("PullRequestEvent");
+    entity2.setRepoName("repoName2");
+    entity2.setActorLogin("actorLogin2");
+    entity2.setPayload("{\"action\":\"opened\"}");
+    Instant createdAt2 = Instant.parse("2023-01-02T00:00:00Z");
+    entity2.setCreatedAt(createdAt2);
+    entity2.setProcessed(true);
 
-        List<GitHubEventResponseDto> dtos = mapper.toResponseDtos(List.of(entity, entity2));
+    List<GitHubEventResponseDto> dtos = mapper.toResponseDtos(List.of(entity, entity2));
 
-        assertThat(dtos).hasSize(2);
-        GitHubEventResponseDto gitHubEventResponseDto = dtos.getFirst();
-        assertThat(gitHubEventResponseDto.getId()).isEqualTo(1L);
-        assertThat(gitHubEventResponseDto.getGitHubEventId()).isEqualTo("123456789");
-        assertThat(gitHubEventResponseDto.getType()).isEqualTo("PushEvent");
-        assertThat(gitHubEventResponseDto.getRepoName()).isEqualTo("repoName1");
-        assertThat(gitHubEventResponseDto.getActorLogin()).isEqualTo("actorLogin1");
-        assertThat(gitHubEventResponseDto.getPayload()).isEqualTo("{\"ref\":\"refs/head/main\"}");
-        assertThat(gitHubEventResponseDto.getCreatedAt()).isEqualTo(createdAt1);
-        assertThat(gitHubEventResponseDto.isProcessed()).isFalse();
+    assertThat(dtos).hasSize(2);
+    GitHubEventResponseDto gitHubEventResponseDto = dtos.getFirst();
+    assertThat(gitHubEventResponseDto.getId()).isEqualTo(1L);
+    assertThat(gitHubEventResponseDto.getGitHubEventId()).isEqualTo("123456789");
+    assertThat(gitHubEventResponseDto.getType()).isEqualTo("PushEvent");
+    assertThat(gitHubEventResponseDto.getRepoName()).isEqualTo("repoName1");
+    assertThat(gitHubEventResponseDto.getActorLogin()).isEqualTo("actorLogin1");
+    assertThat(gitHubEventResponseDto.getPayload()).isEqualTo("{\"ref\":\"refs/head/main\"}");
+    assertThat(gitHubEventResponseDto.getCreatedAt()).isEqualTo(createdAt1);
+    assertThat(gitHubEventResponseDto.isProcessed()).isFalse();
 
-        GitHubEventResponseDto gitHubEventResponseDto1 = dtos.get(1);
-        assertThat(gitHubEventResponseDto1.getId()).isEqualTo(2L);
-        assertThat(gitHubEventResponseDto1.getGitHubEventId()).isEqualTo("987654321");
-        assertThat(gitHubEventResponseDto1.getType()).isEqualTo("PullRequestEvent");
-        assertThat(gitHubEventResponseDto1.getRepoName()).isEqualTo("repoName2");
-        assertThat(gitHubEventResponseDto1.getActorLogin()).isEqualTo("actorLogin2");
-        assertThat(gitHubEventResponseDto1.getPayload()).isEqualTo("{\"action\":\"opened\"}");
-        assertThat(gitHubEventResponseDto1.getCreatedAt()).isEqualTo(createdAt2);
-        assertThat(gitHubEventResponseDto1.isProcessed()).isTrue();
-    }
+    GitHubEventResponseDto gitHubEventResponseDto1 = dtos.get(1);
+    assertThat(gitHubEventResponseDto1.getId()).isEqualTo(2L);
+    assertThat(gitHubEventResponseDto1.getGitHubEventId()).isEqualTo("987654321");
+    assertThat(gitHubEventResponseDto1.getType()).isEqualTo("PullRequestEvent");
+    assertThat(gitHubEventResponseDto1.getRepoName()).isEqualTo("repoName2");
+    assertThat(gitHubEventResponseDto1.getActorLogin()).isEqualTo("actorLogin2");
+    assertThat(gitHubEventResponseDto1.getPayload()).isEqualTo("{\"action\":\"opened\"}");
+    assertThat(gitHubEventResponseDto1.getCreatedAt()).isEqualTo(createdAt2);
+    assertThat(gitHubEventResponseDto1.isProcessed()).isTrue();
+  }
 }

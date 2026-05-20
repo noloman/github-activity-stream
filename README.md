@@ -214,7 +214,7 @@ Existing local databases are upgraded through Flyway. The second migration adds 
 
 The test profile uses an in-memory H2 database, disables Flyway, disables the scheduled GitHub poller, and prevents Kafka listeners from auto-starting.
 
-Current coverage includes mapper tests, REST controller tests, application context loading, and consumer persistence tests for processed events and duplicate GitHub event IDs.
+Current coverage includes mapper tests, event query service tests, GitHub public event polling tests, REST controller tests, application context loading, and consumer persistence tests for processed events and duplicate GitHub event IDs.
 
 ## Useful Development Commands
 
@@ -318,6 +318,9 @@ These roadmap items are now implemented:
 - Replace the Kafka consumer's `System.err.println` and stack trace printing with structured logging.
 - Improve the dashboard with recent historical loading, live updates, filters, metrics, charts, table selection, event detail views, and modular frontend code.
 - Add README screenshots for desktop and mobile dashboard states.
+- Add event query service tests for pagination, repository, type, recency, and processing-state lookups.
+- Add GitHub public event polling tests for Kafka publishing, empty responses, HTTP failures, and rate-limit backoff.
+- Add Kafka consumer tests for processed event persistence, duplicate GitHub event IDs, invalid JSON, missing GitHub event IDs, missing required stored fields, and invalid event timestamps.
 
 ## Future Improvements
 
@@ -327,8 +330,8 @@ The list below is prioritized by correctness, resilience, and operational value.
 
 These are the most important next improvements because they directly affect confidence in stored data and the ability to change the application safely.
 
-- Add unit tests for the service layer and remaining edge cases in the Kafka consumer.
-- Add integration tests with Testcontainers for Kafka and PostgreSQL.
+- Add consumer tests for WebSocket broadcast behavior and the database-constraint duplicate race path.
+- Add end-to-end integration tests with Testcontainers for Kafka and PostgreSQL.
 
 ### Priority 2: Resilience and Operations
 
@@ -336,7 +339,7 @@ These improvements strengthen runtime behavior under failure conditions and make
 
 - Add retry and backoff behavior for Kafka publishing failures and other transient failures.
 - Add a dead-letter topic for events that cannot be deserialized or persisted.
-- Add event processing workflows that update the `processed` field.
+- Define the meaning of the `processed` field beyond ingestion, then add workflows that move events through those processing states.
 
 ### Priority 3: Observability and API Usability
 

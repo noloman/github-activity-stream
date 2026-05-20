@@ -36,6 +36,10 @@ public class GitHubEventConsumer {
   public void consume(String eventJson) {
     try {
       GitHubEvent gitHubEvent = objectMapper.readValue(eventJson, GitHubEvent.class);
+      if (!StringUtils.hasText(gitHubEvent.getId())) {
+        log.debug("Skipping GitHub event without ID: {}", eventJson);
+        return;
+      }
       if (StringUtils.hasText(gitHubEvent.getId())
           && gitHubEventRepository.existsByGitHubEventId(gitHubEvent.getId())) {
         log.debug("Skipping duplicate GitHub event {}", gitHubEvent.getId());

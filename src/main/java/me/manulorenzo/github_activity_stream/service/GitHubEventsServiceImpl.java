@@ -11,11 +11,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
-public class GitHubEventServiceImpl implements GitHubEventService {
+public class GitHubEventsServiceImpl implements GitHubEventsService {
   private final GitHubEventRepository gitHubEventRepository;
   private final GitHubEventMapper gitHubEventMapper;
 
-  public GitHubEventServiceImpl(
+  public GitHubEventsServiceImpl(
       GitHubEventRepository gitHubEventRepository, GitHubEventMapper gitHubEventMapper) {
     this.gitHubEventRepository = gitHubEventRepository;
     this.gitHubEventMapper = gitHubEventMapper;

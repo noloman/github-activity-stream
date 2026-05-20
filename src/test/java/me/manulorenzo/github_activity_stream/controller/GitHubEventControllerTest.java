@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.Instant;
 import java.util.List;
 import me.manulorenzo.github_activity_stream.dto.GitHubEventResponseDto;
-import me.manulorenzo.github_activity_stream.service.GitHubEventService;
+import me.manulorenzo.github_activity_stream.service.GitHubEventsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -20,13 +20,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(GitHubEventController.class)
 class GitHubEventControllerTest {
-  @MockitoBean private GitHubEventService gitHubEventService;
+  @MockitoBean private GitHubEventsService gitHubEventsService;
 
   @Autowired private MockMvc mockMvc;
 
   @Test
   void getAllEventsReturnsOkWithExpectedPageShape() throws Exception {
-    when(gitHubEventService.getAllEvents(0, 10))
+    when(gitHubEventsService.getAllEvents(0, 10))
         .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
 
     mockMvc
@@ -54,7 +54,7 @@ class GitHubEventControllerTest {
             "{\"key\":\"value\"}",
             false);
 
-    when(gitHubEventService.getAllEvents(0, 10))
+    when(gitHubEventsService.getAllEvents(0, 10))
         .thenReturn(new PageImpl<>(List.of(event), PageRequest.of(0, 10), 1));
 
     mockMvc
@@ -108,7 +108,7 @@ class GitHubEventControllerTest {
 
   @Test
   void getEventsByRepoReturnsOk() throws Exception {
-    when(gitHubEventService.getEventsByRepo("repo")).thenReturn(List.of());
+    when(gitHubEventsService.getEventsByRepo("repo")).thenReturn(List.of());
     mockMvc
         .perform(get("/api/v1/events/repo").param("repoName", "repo"))
         .andExpect(status().isOk())
@@ -130,7 +130,7 @@ class GitHubEventControllerTest {
 
   @Test
   void getEventsByTypeReturnsOk() throws Exception {
-    when(gitHubEventService.getEventsByType("type")).thenReturn(List.of());
+    when(gitHubEventsService.getEventsByType("type")).thenReturn(List.of());
     mockMvc
         .perform(get("/api/v1/events/type").param("type", "type"))
         .andExpect(status().isOk())
@@ -152,7 +152,7 @@ class GitHubEventControllerTest {
 
   @Test
   void getUnprocessedEventsReturnsOk() throws Exception {
-    when(gitHubEventService.getUnprocessedEvents()).thenReturn(List.of());
+    when(gitHubEventsService.getUnprocessedEvents()).thenReturn(List.of());
     mockMvc
         .perform(get("/api/v1/events/unprocessed"))
         .andExpect(status().isOk())
